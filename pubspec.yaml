@@ -1,0 +1,63 @@
+name: gohana_migrated
+description: "Gohana project"
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.0
+  provider: ^6.0.5
+  image_picker: ^1.0.0
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  path_provider: ^2.1.5
+  archive: ^4.0.7
+  share_plus: ^12.0.1
+  app_links: ^3.0.0
+  file_saver: ^0.3.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Gohana_icon.png"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/fonts/
+    - lib/data/ignored_ingredient_tokens.json
+
+  fonts:
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/Playfair_Display/PlayfairDisplay-Italic-VariableFont_wght.ttf
+          style: italic
+        - asset: assets/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 700
+    - family: Playwrite US Trad
+      fonts:
+        - asset: assets/fonts/Playwrite_US_Trad/PlaywriteUSTrad-VariableFont_wght.ttf
+          weight: 700
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins/Poppins-Regular.ttf
+          style: normal
+        - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+          weight: 600

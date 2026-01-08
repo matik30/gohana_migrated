@@ -1,0 +1,46 @@
+{
+  "_note": "All tokens must be lowercase and without diacritics",
+  "units": [
+    "g", "kg", "mg",
+    "ml", "l", "dl", "cl", "dcl",
+    "oz", "lb",
+    "cup", "cups",
+    "tbsp", "tablespoon", "tablespoons",
+    "tsp", "teaspoon", "teaspoons",
+    "lyzica", "lyzice",
+    "lyzicka", "lyzicky",
+    "polievkova", "cajova",
+    "hrncek", "hrnceky",
+    "pohar", "pohare",
+    "ks", "kus", "kusy",
+    "balenie", "balenia",
+    "bal", "pack", "package"
+  ],
+
+  "amount_words": [
+    "a", "an",
+    "few", "little", "some",
+    "half", "quarter",
+    "pol", "stvrť",
+    "½", "¾", "¼"
+  ],
+
+  "preparation_words": [
+    "chopped", "finely", "roughly",
+    "sliced", "diced", "grated",
+    "minced", "crushed",
+    "nakrajane", "nasekane", "postruhane",
+    "jemne", "nahrubo"
+  ],
+
+  "qualifiers": [
+    "fresh", "raw", "cooked",
+    "organic", "bio",
+    "freshly",
+    "cerstve", "surove", "varene"
+  ],
+
+  "symbols": [
+    "-", "–", "/", "×"
+  ]
+}
