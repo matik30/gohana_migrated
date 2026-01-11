@@ -348,30 +348,69 @@ class _RecipesTabState extends State<RecipesTab> {
 
   void _showImportDialog(List<Recipe> recipes) async {
     if (!mounted) return;
-    showDialog(
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    final panel = themeNotifier.panelColor;
+    final accent = themeNotifier.accentColor;
+    final small = themeNotifier.smallColor;
+    final NavigatorState navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import Cookbook'),
-        content: Text('Do you want to import ${recipes.length} recipes from the selected cookbook?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(ctx).pop(),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: panel,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(32),
+          side: BorderSide(color: accent.withValues(alpha: .5), width: 3),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Import Cookbook',
+                style: AppTextStyles.heading2(context, themeNotifier),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Do you want to import ${recipes.length} recipes from the selected cookbook? This action cannot be undone.',
+                style: AppTextStyles.body(context, themeNotifier),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: small,
+                      textStyle: AppTextStyles.small(context, themeNotifier),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: accent,
+                      textStyle: AppTextStyles.smallAccent(context, themeNotifier),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('Import'),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            child: const Text('Import'),
-            onPressed: () async {
-              final box = Hive.box<Recipe>('recipes');
-              for (final r in recipes) {
-                await box.add(r);
-              }
-              if (!mounted) return;
-              Navigator.of(context).pushReplacementNamed('/home');
-            },
-          ),
-        ],
+        ),
       ),
     );
+    if (confirmed == true) {
+      final box = Hive.box<Recipe>('recipes');
+      for (final r in recipes) {
+        await box.add(r);
+      }
+      if (!mounted) return;
+      navigator.pushReplacementNamed('/home');
+    }
   }
 
   // helper: find key for a recipe (match by title+image as a simple heuristic)

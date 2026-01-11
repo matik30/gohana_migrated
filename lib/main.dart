@@ -126,27 +126,29 @@ class _GohanaAppState extends State<GohanaApp> {
   }
 
   // Zobrazí dialóg na potvrdenie importu receptov
+  // Používa AlertDialog s dvoma tlačidlami: Cancel a Import
+  // Po potvrdení importu sa recepty pridajú do Hive boxu a prepne sa na HomeScreen
   void _showImportDialog(List<Recipe> recipes) async {
-    if (!mounted) return;
+    if (!mounted) return; // Kontrola, či je widget stále v strome
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Import Cookbook'),
-        content: Text('Do you want to import ${recipes.length} recipes from the received cookbook?'),
+        title: const Text('Import Cookbook'), // Nadpis dialógu
+        content: Text('Do you want to import \\${recipes.length} recipes from the received cookbook?'), // Text s počtom receptov
         actions: [
           TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'), // Tlačidlo na zrušenie
+            onPressed: () => Navigator.of(ctx).pop(), // Zavrie dialóg
           ),
           TextButton(
-            child: const Text('Import'),
+            child: const Text('Import'), // Tlačidlo na potvrdenie importu
             onPressed: () async {
-              final box = Hive.box<Recipe>('recipes');
+              final box = Hive.box<Recipe>('recipes'); // Získaj box s receptami
               for (final r in recipes) {
-                await box.add(r);
+                await box.add(r); // Pridaj každý recept do boxu
               }
-              if (!mounted) return;
-              Navigator.of(context).pushReplacementNamed('/home');
+              if (!mounted) return; // Kontrola, či je widget stále v strome
+              Navigator.of(context).pushReplacementNamed('/home'); // Prepne na HomeScreen
               // Automatický refresh: prepne na HomeScreen
             },
           ),

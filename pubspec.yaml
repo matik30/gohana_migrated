@@ -1,49 +1,59 @@
+# Názov projektu a základné informácie
 name: gohana_migrated
+# Popis projektu
 description: "Gohana project"
+# Publikovanie na pub.dev je zakázané
 publish_to: 'none'
+# Verzia aplikácie
 version: 0.1.0
 
+# Požadovaná verzia Dart SDK
 environment:
   sdk: ^3.9.2
 
+# Základné závislosti projektu
 dependencies:
   flutter:
     sdk: flutter
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
-  shared_preferences: ^2.2.0
-  provider: ^6.0.5
-  image_picker: ^1.0.0
-  pdf: ^3.11.3
-  printing: ^5.14.2
-  path_provider: ^2.1.5
-  archive: ^4.0.7
-  share_plus: ^12.0.1
-  app_links: ^3.0.0
-  file_saver: ^0.3.1
-  file_picker: ^10.3.8
+  hive: ^2.2.3                # Lokálna databáza (NoSQL)
+  hive_flutter: ^1.1.0        # Integrácia Hive s Flutterom
+  shared_preferences: ^2.2.0  # Jednoduché úložisko kľúč-hodnota
+  provider: ^6.0.5            # Stavový manažment
+  image_picker: ^1.0.0        # Výber obrázkov z galérie/kamery
+  pdf: ^3.11.3                # Generovanie PDF
+  printing: ^5.14.2           # Tlač a export PDF
+  path_provider: ^2.1.5       # Prístup k systémovým adresárom
+  archive: ^4.0.7             # Práca s archívmi (ZIP)
+  share_plus: ^12.0.1         # Zdieľanie súborov a textu
+  app_links: ^3.0.0           # Prijímanie intentov a deep linkov
+  file_saver: ^0.3.1          # Ukladanie súborov do zariadenia
+  file_picker: ^10.3.8        # Výber súborov cez dialóg
 
+# Vývojové závislosti (len pre vývoj/testovanie)
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
-  hive_generator: ^2.0.1
-  build_runner: ^2.4.13
-  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^6.0.0       # Lintovanie a odporúčania
+  hive_generator: ^2.0.1      # Generovanie Hive adapterov
+  build_runner: ^2.4.13       # Build systém pre generovanie kódu
+  flutter_launcher_icons: ^0.13.1 # Generovanie ikon aplikácie
 
+# Konfigurácia pre generovanie ikon aplikácie
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/Gohana_icon.png"
+  image_path: "assets/images/Gohana.png"
 
 flutter:
-  uses-material-design: true
+  uses-material-design: true   # Povolenie Material Design ikon
 
+  # Zoznam assetov (obrázky, fonty, JSON)
   assets:
     - assets/images/
     - assets/fonts/
     - lib/data/ignored_ingredient_tokens.json
 
+  # Definícia vlastných fontov
   fonts:
     - family: Playfair Display
       fonts:
