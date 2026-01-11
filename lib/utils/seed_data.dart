@@ -1,12 +1,14 @@
 import 'package:hive/hive.dart';
 import '../models/recipe.dart';
 
+// Funkcia na seedovanie (naplnenie) databázy vzorovými receptami
 Future<void> seedRecipes() async {
   final box = Hive.box<Recipe>('recipes');
 
-  // ak už sú recepty v Hive, nezasievať znova
+  // Ak už sú recepty v Hive, nezasievať znova (zabráni duplicite)
   if (box.isNotEmpty) return;
 
+  // Zoznam počiatočných (vzorových) receptov
   final List<Recipe> initial = [
     Recipe(
       title: 'Baked Buns',
@@ -22,7 +24,7 @@ Future<void> seedRecipes() async {
       ],
       procedure:
           'Mix all the ingredients for the dough and let the dough rise briefly. Roll out the dough slightly, cut into squares and fill (e.g. with plum jam). Join the filled squares and place them on a greased baking sheet. Brush each bun with melted fat. Bake and sprinkle with sugar.',
-      category: null,
+      category: "Desserts",
       favourite: false,
     ),
     Recipe(
@@ -38,7 +40,7 @@ Future<void> seedRecipes() async {
         'Thai Mango Dipping Sauce'
       ],
       procedure: 'Create an assembly line of vegetables such as carrots, bell peppers, butter lettuce and fresh microgreens. Fill a shallow dish with warm water. Add each rice paper sheet, one at a time, for 5 to 10 seconds. Remove and place on a flat surface. Towards one end of the rice wrapper, begin layering with 1-2 slices of avocado, and small handfuls of fresh cilantro + mint, and a handful of veggies. Sprinkle the veggies with salt + pepper. Fold both ends to the center and roll the sheet as tightly as you can without ripping. Serve the spring rolls with the mango dipping sauce and chopped peanuts.',
-      category: null,
+      category: "Meatless meal",
       favourite: false,
     ),
     Recipe(
@@ -59,11 +61,12 @@ Future<void> seedRecipes() async {
         'Basmati rice'
       ],
       procedure: 'Heat ghee in a pan. Add green chillies and fry for a minute, add chopped onions and fry until softened. Add garlic, ginger and curry leaves, sauté until golden brown. Add tomatoes and ground cumin. Add lentils, water, stir in turmeric and salt. Cover and simmer gently for 1 hour. Remove lid and simmer for 30 minutes until consistency like porrige. Season with garam masala. Serve hot over basmati rice, garnished with a spring of coriander if desired.',
-      category: null,
+      category: "Meatless meal",
       favourite: false,
     ),
   ];
 
+  // Pridaj každý vzorový recept do Hive boxu
   for (final r in initial) {
     await box.add(r);
   }

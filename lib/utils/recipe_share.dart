@@ -6,10 +6,10 @@ import '../models/recipe.dart';
 
 /// Exportuje recept (vrátane obrázka) do ZIP súboru pripraveného na zdieľanie.
 Future<File> exportRecipeToZip(Recipe recipe) async {
-  // 1. Priprav JSON s dátami receptu
+  // 1. Priprav JSON s dátami receptu (iba jeden recept)
   final recipeJson = jsonEncode(recipe.toJson());
 
-  // 2. Priprav obrázok (ak existuje a je lokálny)
+  // 2. Priprav obrázok (ak existuje a je lokálny súbor)
   List<int>? imageBytes;
   String? imageName;
   if (recipe.imageUrl.isNotEmpty && File(recipe.imageUrl).existsSync()) {
@@ -17,12 +17,14 @@ Future<File> exportRecipeToZip(Recipe recipe) async {
     imageName = recipe.imageUrl.split('/').last;
   }
 
-  // 3. Vytvor ZIP
+  // 3. Vytvor ZIP archív v dočasnom adresári
   final encoder = ZipFileEncoder();
   final tempDir = await getTemporaryDirectory();
   final zipPath = '${tempDir.path}/${recipe.title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.gohana';
   encoder.create(zipPath);
+  // Pridaj JSON receptu do ZIPu
   encoder.addFile(File(await _writeTempFile('recipe.json', recipeJson)));
+  // Pridaj obrázok, ak existuje
   if (imageBytes != null && imageName != null) {
     encoder.addFile(File(await _writeTempFile(imageName, imageBytes, isBytes: true)));
   }
@@ -37,7 +39,7 @@ Future<File> exportCookbookToZip(List<Recipe> recipes) async {
   final encoder = ZipFileEncoder();
   encoder.create(zipPath);
 
-  // Pridaj JSON so všetkými receptami
+  // Vždy exportuj pole receptov vo formáte JSON
   final allRecipesJson = jsonEncode(recipes.map((r) => r.toJson()).toList());
   encoder.addFile(File(await _writeTempFile('recipes.json', allRecipesJson)));
 
@@ -55,6 +57,7 @@ Future<File> exportCookbookToZip(List<Recipe> recipes) async {
   return File(zipPath);
 }
 
+// Pomocná funkcia na zápis dočasného súboru (text alebo binárne dáta)
 Future<String> _writeTempFile(String name, dynamic content, {bool isBytes = false}) async {
   final tempDir = await getTemporaryDirectory();
   final file = File('${tempDir.path}/$name');

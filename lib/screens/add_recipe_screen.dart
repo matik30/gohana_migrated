@@ -8,6 +8,8 @@ import 'package:hive/hive.dart';
 import '../models/recipe.dart';
 import '../utils/recipe_image.dart';
 
+/// Obrazovka na pridanie nového receptu do aplikácie.
+/// Umožňuje zadať názov, kategóriu, ingrediencie, postup a pridať obrázok.
 class AddRecipeScreen extends StatefulWidget {
   const AddRecipeScreen({super.key});
 
@@ -16,13 +18,13 @@ class AddRecipeScreen extends StatefulWidget {
 }
 
 class _AddRecipeScreenState extends State<AddRecipeScreen> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _titleController;
-  late TextEditingController _procedureController;
-  late List<TextEditingController> _ingredientControllers;
-  String? _selectedCategory;
-  String? _imagePath;
-  List<String> _categories = [];
+  final _formKey = GlobalKey<FormState>(); // Kľúč pre validáciu formulára
+  late TextEditingController _titleController; // Ovládač pre názov receptu
+  late TextEditingController _procedureController; // Ovládač pre postup
+  late List<TextEditingController> _ingredientControllers; // Ovládače pre ingrediencie
+  String? _selectedCategory; // Aktuálne vybraná kategória
+  String? _imagePath; // Cesta k obrázku
+  List<String> _categories = []; // Zoznam kategórií
 
   @override
   void initState() {
@@ -30,9 +32,10 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     _titleController = TextEditingController();
     _procedureController = TextEditingController();
     _ingredientControllers = [TextEditingController()];
-    _loadCategories();
+    _loadCategories(); // Načíta kategórie z úložiska
   }
 
+  /// Asynchrónne načíta kategórie z Hive a nastaví ich do stavu
   Future<void> _loadCategories() async {
     final cats = await CategoryStorage.getCategories();
     setState(() {
@@ -43,18 +46,18 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     });
   }
 
+  /// Otvorí galériu a umožní vybrať obrázok receptu
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       String path = picked.path;
-      // Kontrola content URI
-      // If you get a content:// URI, you may need to use a different plugin (like file_picker) to resolve it.
-      // For now, just set the path as is. If you encounter issues, consider using file_picker for better compatibility.
+      // Ak je cesta content://, odporúča sa použiť file_picker pre lepšiu kompatibilitu
       setState(() => _imagePath = path);
     }
   }
 
+  /// Uloží nový recept do Hive databázy
   void _saveRecipe() async {
     if (!_formKey.currentState!.validate()) return;
     final box = await Hive.openBox<Recipe>('recipes');
@@ -132,6 +135,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Výber obrázka receptu
                 GestureDetector(
                   onTap: _pickImage,
                   child: _imagePath != null && _imagePath!.isNotEmpty
@@ -163,6 +167,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                         ),
                 ),
                 const SizedBox(height: 16),
+                // Pole pre názov receptu
                 Text(
                   'Title',
                   style: AppTextStyles.heading2(context, themeNotifier),
@@ -191,6 +196,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                       value == null || value.isEmpty ? 'Enter a name' : null,
                 ),
                 const SizedBox(height: 16),
+                // Výber kategórie
                 Text(
                   'Category',
                   style: AppTextStyles.heading2(context, themeNotifier),
@@ -225,6 +231,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   style: AppTextStyles.body(context, themeNotifier),
                 ),
                 const SizedBox(height: 16),
+                // Zoznam ingrediencií
                 Text(
                   'Ingredients',
                   style: AppTextStyles.heading2(context, themeNotifier),
@@ -279,6 +286,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Pole pre postup
                 Text(
                   'Procedure',
                   style: AppTextStyles.heading2(context, themeNotifier),
@@ -308,6 +316,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                       value == null || value.isEmpty ? 'Enter procedure' : null,
                 ),
                 const SizedBox(height: 24),
+                // Tlačidlo na uloženie receptu
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,

@@ -4,6 +4,9 @@ import 'package:hive/hive.dart';
 import '../models/recipe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Importy potrebných balíkov a súborov
+
+// Úvodná obrazovka (SplashScreen), ktorá sa zobrazí pri štarte aplikácie
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -11,43 +14,37 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+// Stavová trieda pre SplashScreen
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
+  // Premenná pre stav priebehu načítavania (0.0 - 1.0)
   double _progress = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
-    _fadeController.forward();
+    // Spustenie inicializačných krokov aplikácie
     _startInitialization();
   }
 
+  // Asynchrónna inicializácia aplikácie (databáza, téma, simulované kroky)
   Future<void> _startInitialization() async {
-    // 1. Init Hive
+    // 1. Inicializácia Hive (databáza)
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() => _progress = 0.2);
     await Hive.openBox<Recipe>('recipes');
     setState(() => _progress = 0.4);
-    // 2. Load theme (simulácia)
+    // 2. Načítanie témy (simulácia)
     await Future.delayed(const Duration(milliseconds: 300));
     await SharedPreferences.getInstance();
     setState(() => _progress = 0.6);
-    // 3. Simuluj ďalšie kroky (napr. seedovanie, migrácie...)
+    // 3. Simulácia ďalších krokov (napr. seedovanie, migrácie...)
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() => _progress = 0.8);
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() => _progress = 1.0);
     await Future.delayed(const Duration(milliseconds: 200));
+    // Po dokončení presmeruj na hlavnú obrazovku
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     }
@@ -55,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _fadeController.dispose();
+    // Už nie je potrebné uvoľňovať AnimationController
     super.dispose();
   }
 
@@ -65,13 +62,16 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: AppColors.background,
       body: Center(
         child: FadeTransition(
-          opacity: _fadeAnimation,
+          // Fade loga je teraz priamo viazaný na hodnotu _progress (0.0 - 1.0)
+          opacity: AlwaysStoppedAnimation(_progress),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo aplikácie
               Image.asset('assets/images/Gohana.png', width: 350),
               const SizedBox(height: 20),
               const SizedBox(height: 40),
+              // Indikátor priebehu načítavania
               SizedBox(
                 width: 200,
                 child: LinearProgressIndicator(

@@ -12,6 +12,7 @@ import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'dart:convert';
 
+/// Hlavná obrazovka nákupného košíka s navigáciou a možnosťou prepínať medzi záložkami.
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -20,13 +21,15 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 1; // Aktuálne vybraná záložka (1 = Cart)
 
+  // Zoznam obrazoviek v navigácii (prvá je placeholder pre Recipes)
   final List<Widget> _screens = const [
     SizedBox.shrink(), // placeholder for Recipes tab
     CartTab(),
   ];
 
+  /// Prepína záložky v spodnej navigácii
   void _onItemTapped(int index) {
     if (index == 0) {
       Navigator.pushNamed(context, '/home');
@@ -38,7 +41,7 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    Hive.openBox<String>('cart');
+    Hive.openBox<String>('cart'); // Otvorí box pre nákupný zoznam
   }
 
   @override
@@ -73,6 +76,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
+/// Záložka s obsahom nákupného košíka a možnosťami exportu, zdieľania a mazania
 class CartTab extends StatefulWidget {
   const CartTab({super.key});
 

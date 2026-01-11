@@ -1,3 +1,4 @@
+// Hlavný vstupný bod aplikácie Gohana
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,26 +19,30 @@ import 'utils/seed_data.dart';
 import 'utils/recipe_import.dart';
 import 'utils/ingredient_normalizer.dart';
 
+// Globálna premenná na zachytenie intentu z Androidu (napr. otvorenie .gohana súboru)
+String? pendingImportUri;
+
 void main() async {
+  // Inicializácia Flutter bindingov a potrebných služieb
   WidgetsFlutterBinding.ensureInitialized();
-  await loadIgnoredTokensGlobal();
-  // inicializácia Hive pre Flutter
-  await Hive.initFlutter();
-  // zmaž starý box (odstráni všetky staré dáta, vrátane nekompatibilných)
-  //await Hive.deleteBoxFromDisk('recipes');
-  // zaregistruj adapter (vytvára sa cez build_runner ak používaš @HiveType)
-  Hive.registerAdapter(RecipeAdapter());
-  // otvorenie boxu (databázy) pre recepty
-  await Hive.openBox<Recipe>('recipes');
-  // naplň box mock dátami ak je prázdny
-  await seedRecipes();
-  // create ThemeNotifier (loads persisted SharedPreferences)
-  final themeNotifier = await ThemeNotifier.create();
+  await loadIgnoredTokensGlobal(); // Načíta zoznam ignorovaných tokenov pre normalizáciu ingrediencií
+  await Hive.initFlutter(); // Inicializuje Hive databázu
+  Hive.registerAdapter(RecipeAdapter()); // Zaregistruje adapter pre model Recipe
+  await Hive.openBox<Recipe>('recipes'); // Otvorí box s receptami
+  await seedRecipes(); // Pridá základné recepty ak je box prázdny
+  final themeNotifier = await ThemeNotifier.create(); // Inicializuje správcu témy
 
-  //await migrateAddCategory(); // <- spusti migráciu tu (len raz)
+  // Nastavenie MethodChannel pre komunikáciu s natívnym Android kódom
+  const platform = MethodChannel('gohana/intent');
+  platform.setMethodCallHandler((call) async {
+    if (call.method == 'importGohanaFile') {
+      pendingImportUri = call.arguments as String?;
+    }
+    return null;
+  });
+  platform.invokeMethod('flutterReady'); // Oznámi Androidu, že Flutter je pripravený
 
-  // voliteľné: vloženie seed dát len ak je box prázdny
-  //await seedRecipes();
+  // Spustenie aplikácie s poskytovateľom témy
   runApp(
     ChangeNotifierProvider<ThemeNotifier>.value(
       value: themeNotifier,
@@ -46,6 +51,7 @@ void main() async {
   );
 }
 
+// Hlavný widget aplikácie
 class GohanaApp extends StatefulWidget {
   const GohanaApp({super.key});
 
@@ -54,19 +60,30 @@ class GohanaApp extends StatefulWidget {
 }
 
 class _GohanaAppState extends State<GohanaApp> {
-  AppLinks? _appLinks;
+  static const platform = MethodChannel('gohana/intent'); // Komunikácia s Androidom
+  AppLinks? _appLinks; // Pre deep linky a file intent
+
   @override
   void initState() {
     super.initState();
-    // Listener na file intent/deep link cez app_links
+    // Po prvom frame skontroluje, či neprišiel intent na import receptu
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (pendingImportUri != null) {
+        _importGohanaFile(pendingImportUri!);
+        pendingImportUri = null;
+      }
+    });
+    // Nastaví handler pre MethodChannel (Android -> Flutter)
+    platform.setMethodCallHandler(_handleIntent);
+    // Listener na file intent/deep link cez app_links (napr. ak otvoríš .gohana cez iný spôsob)
     _appLinks = AppLinks();
     _appLinks!.uriLinkStream.listen((Uri? uri) async {
-      if (uri != null && uri.path.endsWith('.gohana')) {
+      if (uri != null) {
         File? file;
         if (uri.scheme == 'file') {
           file = File(uri.path);
         } else if (uri.scheme == 'content') {
-          // Platform channel na získanie reálneho súboru z content:// uri
+          // Ak je to content:// URI, získaj reálnu cestu cez platform channel
           const platform = MethodChannel('gohana/content_uri');
           final tempPath = await platform.invokeMethod<String>('getFileFromContentUri', {'uri': uri.toString()});
           if (tempPath != null) file = File(tempPath);
@@ -78,9 +95,37 @@ class _GohanaAppState extends State<GohanaApp> {
           }
         }
       }
-    }, onError: (err) {});
+    });
   }
 
+  // Handler pre MethodChannel (Android -> Flutter)
+  Future<void> _handleIntent(MethodCall call) async {
+    if (call.method == 'importGohanaFile') {
+      final uri = call.arguments as String;
+      await _importGohanaFile(uri);
+    }
+  }
+
+  // Importuje recepty zo zadaného súboru (file:// alebo content://)
+  Future<void> _importGohanaFile(String uri) async {
+    File? file;
+    if (uri.startsWith('file://')) {
+      file = File(Uri.parse(uri).toFilePath());
+    } else if (uri.startsWith('content://')) {
+      // Získa reálnu cestu k súboru z content:// URI
+      const platform = MethodChannel('gohana/content_uri');
+      final tempPath = await platform.invokeMethod<String>('getFileFromContentUri', {'uri': uri});
+      if (tempPath != null) file = File(tempPath);
+    }
+    if (file != null && file.existsSync()) {
+      final recipes = await importRecipesFromZip(file);
+      if (recipes.isNotEmpty && mounted) {
+        _showImportDialog(recipes);
+      }
+    }
+  }
+
+  // Zobrazí dialóg na potvrdenie importu receptov
   void _showImportDialog(List<Recipe> recipes) async {
     if (!mounted) return;
     showDialog(
@@ -110,6 +155,7 @@ class _GohanaAppState extends State<GohanaApp> {
     );
   }
 
+  // Vytvorí svetlú tému aplikácie
   ThemeData _buildLightTheme(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final smallAccent = AppTextStyles.smallAccent(context, themeNotifier);
@@ -142,6 +188,7 @@ class _GohanaAppState extends State<GohanaApp> {
     );
   }
 
+  // Vytvorí tmavú tému aplikácie
   ThemeData _buildDarkTheme(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final smallAccent = AppTextStyles.smallAccent(context, themeNotifier);
@@ -174,6 +221,7 @@ class _GohanaAppState extends State<GohanaApp> {
     );
   }
 
+  // Build metóda - definuje MaterialApp a routovanie
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);

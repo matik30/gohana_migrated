@@ -1,9 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gohana_migrated/theme/colors.dart';
 import 'package:gohana_migrated/theme/fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:gohana_migrated/theme/theme_notifier.dart';
-
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/recipe.dart';
 import '../data/category_storage.dart';
@@ -11,7 +11,10 @@ import 'package:share_plus/share_plus.dart';
 import '../utils/recipe_share.dart';
 import 'package:file_saver/file_saver.dart';
 import '../utils/recipe_image.dart';
+import 'package:file_picker/file_picker.dart';
+import '../utils/recipe_import.dart';
 
+/// Hlavná obrazovka aplikácie s navigáciou medzi receptami a košíkom.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -20,13 +23,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Aktuálne vybraná záložka
 
+  // Zoznam obrazoviek v navigácii (prvá je Recipes, druhá Cart)
   final List<Widget> _screens = const [
     RecipesTab(),
     SizedBox.shrink(), // placeholder for Cart tab
   ];
 
+  /// Prepína záložky v spodnej navigácii
   void _onItemTapped(int index) {
     if (index == 1) {
       Navigator.pushNamed(context, '/cart');
@@ -37,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // get current theme colors from provider (only variables used in this method)
+    // Získa aktuálne farby témy z provideru
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final bg = themeNotifier.bgColor;
     final accent = themeNotifier.accentColor;
@@ -71,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+/// Tab s receptami, kategóriami a možnosťami importu/exportu
 class RecipesTab extends StatefulWidget {
   const RecipesTab({super.key});
 
@@ -89,12 +95,14 @@ class _RecipesTabState extends State<RecipesTab> {
     _loadCategories();
   }
 
+  /// Načíta kategórie z úložiska
   Future<void> _loadCategories() async {
     final cats = await CategoryStorage.getCategories();
     if (!mounted) return;
     setState(() => _categories = cats);
   }
 
+  /// Zobrazí dialóg na úpravu kategórií (pridanie, premenovanie, mazanie, reset)
   void _showEditCategoriesDialog() async {
     if (!mounted) return;
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
@@ -322,6 +330,50 @@ class _RecipesTabState extends State<RecipesTab> {
     );
   }
 
+  Future<void> _importRecipeFromFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['gohana'],
+    );
+    if (result != null && result.files.single.path != null) {
+      final file = File(result.files.single.path!);
+      if (file.existsSync()) {
+        final recipes = await importRecipesFromZip(file);
+        if (recipes.isNotEmpty && mounted) {
+          _showImportDialog(recipes);
+        }
+      }
+    }
+  }
+
+  void _showImportDialog(List<Recipe> recipes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Import Cookbook'),
+        content: Text('Do you want to import ${recipes.length} recipes from the selected cookbook?'),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          TextButton(
+            child: const Text('Import'),
+            onPressed: () async {
+              final box = Hive.box<Recipe>('recipes');
+              for (final r in recipes) {
+                await box.add(r);
+              }
+              if (!mounted) return;
+              Navigator.of(context).pushReplacementNamed('/home');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   // helper: find key for a recipe (match by title+image as a simple heuristic)
   dynamic _keyForRecipe(Box<Recipe> box, Recipe recipe) {
     for (final key in box.keys) {
@@ -382,6 +434,9 @@ class _RecipesTabState extends State<RecipesTab> {
                         break;
                       case 3:
                         _shareCookbook();
+                        break;
+                      case 4:
+                        _importRecipeFromFile();
                         break;
                     }
                   },
@@ -468,6 +523,27 @@ class _RecipesTabState extends State<RecipesTab> {
                             const SizedBox(width: 10),
                             Text(
                               'Share cookbook',
+                              style: AppTextStyles.smallText(
+                                context,
+                                themeNotifier,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 4,
+                        enabled: true,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.file_open,
+                              color: themeNotifier.textColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Import recipe',
                               style: AppTextStyles.smallText(
                                 context,
                                 themeNotifier,

@@ -1,5 +1,6 @@
 {
   "_note": "All tokens must be lowercase and without diacritics",
+
   "units": [
     "g", "kg", "mg",
     "ml", "l", "dl", "cl", "dcl",
@@ -9,7 +10,7 @@
     "tsp", "teaspoon", "teaspoons",
     "lyzica", "lyzice",
     "lyzicka", "lyzicky",
-    "polievkova", "cajova",
+    "polievkova", "cajova", "pl",
     "hrncek", "hrnceky",
     "pohar", "pohare",
     "ks", "kus", "kusy",

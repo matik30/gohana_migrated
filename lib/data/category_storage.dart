@@ -1,8 +1,12 @@
 import 'package:hive/hive.dart';
 import '../models/recipe.dart';
 
+/// Trieda na správu kategórií receptov pomocou Hive databázy.
+/// Umožňuje pridávať, premenovávať, mazať a resetovať kategórie.
 class CategoryStorage {
+  /// Názov Hive boxu pre kategórie
   static const String boxName = 'categories';
+  /// Zoznam predvolených kategórií
   static const List<String> defaultCategories = [
     'Soup',
     'Meat and fish',
@@ -13,10 +17,12 @@ class CategoryStorage {
     'Others',
   ];
 
+  /// Otvorí Hive box pre kategórie (asynchrónne)
   static Future<Box> openBox() async {
     return await Hive.openBox<String>(boxName);
   }
 
+  /// Získa zoznam kategórií, ak je box prázdny, naplní ho predvolenými hodnotami
   static Future<List<String>> getCategories() async {
     final box = await openBox();
     if (box.isEmpty) {
@@ -25,16 +31,18 @@ class CategoryStorage {
     return box.values.cast<String>().toList();
   }
 
+  /// Pridá novú kategóriu
   static Future<void> addCategory(String name) async {
     final box = await openBox();
     await box.add(name);
   }
 
+  /// Premenuje kategóriu a aktualizuje všetky recepty, ktoré ju používajú
   static Future<void> renameCategory(int index, String newName, String oldName) async {
     final box = await openBox();
     final key = box.keyAt(index);
     await box.put(key, newName);
-    // Update recipes
+    // Aktualizuje všetky recepty s pôvodnou kategóriou
     final recipeBox = Hive.box<Recipe>('recipes');
     for (final rKey in recipeBox.keys) {
       final recipe = recipeBox.get(rKey);
@@ -45,12 +53,13 @@ class CategoryStorage {
     }
   }
 
+  /// Vymaže kategóriu a všetky recepty s touto kategóriou presunie do 'Others'
   static Future<void> deleteCategory(int index) async {
     final box = await openBox();
     final key = box.keyAt(index);
     final deletedCategory = box.get(key);
     await box.delete(key);
-    // Move recipes to 'Others'
+    // Presunie recepty do 'Others'
     final recipeBox = Hive.box<Recipe>('recipes');
     for (final rKey in recipeBox.keys) {
       final recipe = recipeBox.get(rKey);
@@ -61,11 +70,12 @@ class CategoryStorage {
     }
   }
 
+  /// Resetuje kategórie na predvolené a všetky recepty s neznámou kategóriou presunie do 'Others'
   static Future<void> resetToDefault() async {
     final box = await openBox();
     await box.clear();
     await box.addAll(defaultCategories);
-    // Update recipes: set category to 'Others' if not in default
+    // Nastaví 'Others' pre recepty s neznámou kategóriou
     final recipeBox = Hive.box<Recipe>('recipes');
     for (final rKey in recipeBox.keys) {
       final recipe = recipeBox.get(rKey);

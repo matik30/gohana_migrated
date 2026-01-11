@@ -15,7 +15,9 @@ import 'edit_recipe_screen.dart';
 import '../utils/recipe_image.dart';
 import '../utils/ingredient_normalizer.dart';
 
+/// Obrazovka s detailom receptu
 class RecipeDetailScreen extends StatefulWidget {
+  /// Recept, ktorý sa má zobraziť
   final Recipe recipe;
   const RecipeDetailScreen({super.key, required this.recipe});
 
@@ -23,17 +25,21 @@ class RecipeDetailScreen extends StatefulWidget {
   State<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
 }
 
+/// Stavová trieda pre RecipeDetailScreen
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
+  /// Zoznam označených (zaškrtnutých) ingrediencií
   late List<bool> _checked;
 
   @override
   void initState() {
     super.initState();
+    // Inicializácia zoznamu označených ingrediencií (všetky nezaškrtnuté)
     _checked = List.generate(widget.recipe.ingredients.length, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Získanie farieb a tém z ThemeNotifiera
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final bg = themeNotifier.bgColor;
     final accent = themeNotifier.accentColor;
@@ -41,6 +47,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     final isFavourite = widget.recipe.favourite;
 
     return Scaffold(
+      // Vlastný AppBar s menu a akciami
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(48),
         child: SafeArea(
@@ -58,6 +65,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             ),
             leading: BackButton(color: Theme.of(context).colorScheme.secondary),
             actions: [
+              // Menu s akciami (obľúbené, editácia, tlač, zdieľanie, mazanie)
               PopupMenuButton<int>(
                 icon: Icon(
                   Icons.menu,
@@ -67,12 +75,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 onSelected: (value) async {
                   switch (value) {
                     case 0:
+                      // Prepnutie obľúbeného stavu receptu
                       setState(() {
                         widget.recipe.favourite = !widget.recipe.favourite;
                       });
                       await widget.recipe.save();
                       break;
                     case 1:
+                      // Prechod na obrazovku editácie receptu
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -81,26 +91,29 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         ),
                       ).then((updatedRecipe) {
                         if (updatedRecipe != null && mounted) {
-                          setState(() {}); // refresh detail after edit
+                          setState(() {}); // refresh detail po editácii
                         }
                       });
                       break;
                     case 2:
+                      // Export receptu do PDF a tlač
                       final pdf = await recipeToPdf(widget.recipe);
                       await Printing.layoutPdf(
                         onLayout: (PdfPageFormat format) async => pdf.save(),
                       );
                       break;
                     case 3:
+                      // Export receptu do .gohana ZIP a zdieľanie
                       final file = await exportRecipeToZip(widget.recipe);
                       await SharePlus.instance.share(
                         ShareParams(
                           files: [XFile(file.path)],
-                          text: 'Gohana Recipe: ${widget.recipe.title}',
+                          text: 'Gohana Recipe: {widget.recipe.title}',
                         ),
                       );
                       break;
                     case 4:
+                      // Potvrdenie a mazanie receptu
                       final themeNotifier = Provider.of<ThemeNotifier>(
                         context,
                         listen: false,
@@ -173,6 +186,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       break;
                   }
                 },
+                // Položky menu
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 0,
@@ -257,11 +271,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           ),
         ),
       ),
+      // Hlavné telo obrazovky s detailom receptu
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Obrázok receptu
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: RecipeImage(
@@ -279,6 +295,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     style: AppTextStyles.heading2(context, themeNotifier),
                   ),
                 ),
+                // Tlačidlo na pridanie označených ingrediencií do košíka
                 IconButton(
                   icon: Icon(
                     Icons.add_shopping_cart,
@@ -291,6 +308,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       ? () async {
                           final navigator = Navigator.of(context);
                           final box = await Hive.openBox<String>('cart');
+                          // Vyber označené ingrediencie, normalizuj a pridaj do košíka
                           final selected = widget.recipe.ingredients
                               .asMap()
                               .entries
@@ -312,6 +330,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ],
             ),
             const SizedBox(height: 4),
+            // Zoznam ingrediencií s možnosťou zaškrtnutia
             ...widget.recipe.ingredients.asMap().entries.map((e) {
               final i = e.key;
               final ingredient = e.value;
@@ -320,7 +339,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 child: CheckboxListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  // make rows more compact
+                  // zmenšené riadky
                   visualDensity: const VisualDensity(
                     horizontal: 0,
                     vertical: -4.0,
@@ -338,11 +357,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               );
             }),
             const SizedBox(height: 32),
+            // Nadpis postupu
             Text(
               'Procedure',
               style: AppTextStyles.heading2(context, themeNotifier),
             ),
             const SizedBox(height: 8),
+            // Text postupu receptu
             Text(
               widget.recipe.procedure,
               style: AppTextStyles.body(context, themeNotifier),

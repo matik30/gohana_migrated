@@ -7,8 +7,10 @@ import '../data/category_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/recipe_image.dart';
 
+/// Obrazovka na úpravu existujúceho receptu.
+/// Umožňuje meniť názov, kategóriu, ingrediencie, postup a obrázok receptu.
 class EditRecipeScreen extends StatefulWidget {
-  final Recipe recipe;
+  final Recipe recipe; // Recept, ktorý sa bude upravovať
   const EditRecipeScreen({super.key, required this.recipe});
 
   @override
@@ -16,16 +18,17 @@ class EditRecipeScreen extends StatefulWidget {
 }
 
 class _EditRecipeScreenState extends State<EditRecipeScreen> {
-  late TextEditingController _titleController;
-  late TextEditingController _procedureController;
-  late List<TextEditingController> _ingredientControllers;
-  String? _selectedCategory;
-  String? _imagePath;
-  List<String> _categories = [];
+  late TextEditingController _titleController; // Ovládač pre názov
+  late TextEditingController _procedureController; // Ovládač pre postup
+  late List<TextEditingController> _ingredientControllers; // Ovládače pre ingrediencie
+  String? _selectedCategory; // Aktuálne vybraná kategória
+  String? _imagePath; // Cesta k obrázku
+  List<String> _categories = []; // Zoznam kategórií
 
   @override
   void initState() {
     super.initState();
+    // Inicializácia ovládačov s hodnotami z receptu
     _titleController = TextEditingController(text: widget.recipe.title);
     _procedureController = TextEditingController(text: widget.recipe.procedure);
     _ingredientControllers = widget.recipe.ingredients
@@ -36,11 +39,13 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
     _loadCategories();
   }
 
+  /// Načíta kategórie z úložiska
   Future<void> _loadCategories() async {
     final cats = await CategoryStorage.getCategories();
     setState(() => _categories = cats);
   }
 
+  /// Umožní vybrať nový obrázok z galérie
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -49,6 +54,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
     }
   }
 
+  /// Uloží zmeny v recepte do Hive databázy
   void _saveRecipe() async {
     widget.recipe.title = _titleController.text.trim();
     widget.recipe.procedure = _procedureController.text.trim();
@@ -101,6 +107,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Výber obrázka
             GestureDetector(
               onTap: _pickImage,
               child: _imagePath != null && _imagePath!.isNotEmpty
@@ -132,6 +139,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
                     ),
             ),
             const SizedBox(height: 16),
+            // Pole pre názov
             Text(
               'Title',
               style: AppTextStyles.heading2(context, themeNotifier),
@@ -155,6 +163,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Výber kategórie
             Text(
               'Category',
               style: AppTextStyles.heading2(context, themeNotifier),
@@ -189,6 +198,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
               style: AppTextStyles.body(context, themeNotifier),
             ),
             const SizedBox(height: 16),
+            // Zoznam ingrediencií
             Text(
               'Ingredients',
               style: AppTextStyles.heading2(context, themeNotifier),
@@ -240,6 +250,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
               },
             ),
             const SizedBox(height: 16),
+            // Pole pre postup
             Text(
               'Procedure',
               style: AppTextStyles.heading2(context, themeNotifier),
@@ -264,6 +275,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
               maxLines: 6,
             ),
             const SizedBox(height: 24),
+            // Tlačidlo na uloženie zmien
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: accent,
